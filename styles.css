@@ -30,33 +30,51 @@ body {
 .app-shell {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 16px;
 }
 
 .app-header {
   text-align: left;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .app-header h1 {
-  font-size: 1.9rem;
+  font-size: 1.6rem;
   margin: 0 0 4px;
 }
 
 .app-header p {
   margin: 0;
   color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .app-main {
   display: grid;
-  grid-template-columns: minmax(0, 340px) minmax(0, 1.5fr);
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
-@media (max-width: 900px) {
+@media (min-width: 900px) {
+  .app-shell {
+    padding: 24px 16px 48px;
+  }
+  
+  .app-header h1 {
+    font-size: 1.9rem;
+  }
+  
+  .app-header p {
+    font-size: 1rem;
+  }
+  
+  .app-header {
+    margin-bottom: 24px;
+  }
+  
   .app-main {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 340px) minmax(0, 1.5fr);
+    gap: 24px;
   }
 }
 
@@ -64,32 +82,52 @@ body {
   background: radial-gradient(circle at top left, #111827 0, #020617 55%, #020617 100%);
   border-radius: 16px;
   border: 1px solid var(--border-subtle);
-  padding: 20px 18px;
+  padding: 16px;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+@media (min-width: 600px) {
+  .card {
+    padding: 20px 18px;
+  }
 }
 
 .card h2 {
   margin-top: 0;
   margin-bottom: 12px;
-  font-size: 1.1rem;
+  font-size: 1rem;
+}
+
+@media (min-width: 600px) {
+  .card h2 {
+    font-size: 1.1rem;
+  }
 }
 
 /* Form styling */
 
 .form-row {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 12px;
 }
 
-.form-row.vertical {
-  flex-direction: column;
+@media (min-width: 600px) {
+  .form-row {
+    flex-direction: row;
+  }
+  
+  .form-row.vertical {
+    flex-direction: column;
+  }
 }
 
 label {
   font-size: 0.75rem;
   color: var(--text-muted);
   margin-bottom: 4px;
+  display: block;
 }
 
 input,
@@ -100,14 +138,23 @@ button {
 
 .input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #1f2937;
   background: #020617;
   color: var(--text-main);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   outline: none;
   transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (min-width: 600px) {
+  .input {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
 }
 
 .input:focus {
@@ -116,26 +163,69 @@ button {
   background: #020617;
 }
 
+/* Dark styling voor date/time pickers */
+.input[type="date"],
+.input[type="time"],
+.input[type="month"] {
+  color-scheme: dark;
+}
+
 .input::-webkit-calendar-picker-indicator {
   filter: invert(0.9);
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.input::-webkit-datetime-edit {
+  color: var(--text-main);
+}
+
+.input::-webkit-datetime-edit-fields-wrapper {
+  color: var(--text-main);
+}
+
+.input::-webkit-datetime-edit-text {
+  color: var(--text-muted);
+}
+
+.input::-webkit-datetime-edit-month-field,
+.input::-webkit-datetime-edit-day-field,
+.input::-webkit-datetime-edit-year-field,
+.input::-webkit-datetime-edit-hour-field,
+.input::-webkit-datetime-edit-minute-field {
+  color: var(--text-main);
 }
 
 /* Buttons */
 
 .button {
-  padding: 8px 12px;
+  padding: 10px 16px;
   border-radius: 999px;
   border: 1px solid transparent;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   white-space: nowrap;
   transition: transform 0.08s ease, box-shadow 0.1s ease, filter 0.1s ease;
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    width: auto;
+  }
 }
 
 .button:hover {
@@ -159,7 +249,7 @@ button {
 }
 
 .button.small {
-  padding: 5px 8px;
+  padding: 6px 10px;
   font-size: 0.75rem;
 }
 
@@ -183,12 +273,21 @@ button {
 
 .table-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
-  align-items: center;
-  padding: 8px 10px 6px;
+  align-items: stretch;
+  padding: 10px;
   border-bottom: 1px solid #111827;
   background: radial-gradient(circle at top right, #0f172a 0, #020617 70%);
+}
+
+@media (min-width: 600px) {
+  .table-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 8px 10px 6px;
+  }
 }
 
 .table-toolbar-left,
@@ -199,8 +298,10 @@ button {
   align-items: center;
 }
 
-.table-toolbar-right {
-  margin-left: auto;
+@media (min-width: 600px) {
+  .table-toolbar-right {
+    margin-left: auto;
+  }
 }
 
 .table-toolbar span {
@@ -208,11 +309,24 @@ button {
   color: var(--text-muted);
 }
 
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .table-surface {
   width: 100%;
+  min-width: 600px;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+}
+
+@media (min-width: 600px) {
+  .table-surface {
+    font-size: 0.8rem;
+    min-width: 100%;
+  }
 }
 
 .table-surface thead {
@@ -221,24 +335,38 @@ button {
 
 .table-surface th,
 .table-surface td {
-  padding: 8px 10px;
+  padding: 8px 6px;
   border-bottom: 1px solid #020617;
+}
+
+@media (min-width: 600px) {
+  .table-surface th,
+  .table-surface td {
+    padding: 8px 10px;
+  }
 }
 
 .table-surface th {
   font-weight: 500;
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   user-select: none;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (min-width: 600px) {
+  .table-surface th {
+    font-size: 0.75rem;
+  }
 }
 
 .table-surface th.sortable::after {
   content: '↕';
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   opacity: 0.4;
-  margin-left: 4px;
+  margin-left: 3px;
 }
 
 .table-surface tr:nth-child(even) td {
@@ -255,16 +383,25 @@ button {
 
 .table-surface td.actions-cell {
   text-align: right;
+  white-space: nowrap;
 }
 
 /* Summary pill */
 
 .summary-pill {
-  padding: 5px 10px;
+  padding: 6px 10px;
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+@media (min-width: 600px) {
+  .summary-pill {
+    font-size: 0.75rem;
+  }
 }
 
 /* Month filter */
@@ -273,18 +410,27 @@ button {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .month-filter {
+    width: auto;
+  }
 }
 
 .month-filter label {
   margin: 0;
+  white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-  .table-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .table-toolbar-right {
-    margin-left: 0;
+.month-filter .input {
+  flex: 1;
+}
+
+@media (min-width: 600px) {
+  .month-filter .input {
+    width: auto;
+    flex: none;
   }
 }

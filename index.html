@@ -31,8 +31,8 @@
         <div class="form-row">
           <button id="registerBtn" class="button">Registreren</button>
           <button id="loginBtn" class="button secondary">Inloggen</button>
-          <button id="logoutBtn" class="button danger" style="display:none;">Uitloggen</button>
         </div>
+        <button id="logoutBtn" class="button danger" style="display:none;">Uitloggen</button>
         <p id="authMessage"></p>
       </section>
 
@@ -44,6 +44,8 @@
             <label for="date">Datum</label>
             <input id="date" type="date" class="input">
           </div>
+        </div>
+        <div class="form-row">
           <div style="flex:1;">
             <label for="startTime">Starttijd</label>
             <input id="startTime" type="time" class="input">
@@ -66,32 +68,34 @@
             <div class="table-toolbar-left">
               <div class="month-filter">
                 <label for="monthSelect">Maand:</label>
-                <input id="monthSelect" type="month" class="input" style="width:auto;">
+                <input id="monthSelect" type="month" class="input">
               </div>
             </div>
             <div class="table-toolbar-right">
               <span class="summary-pill">
-                Totaal uren (maand): <span id="totalHoursMonth">0</span>
+                Maand: <span id="totalHoursMonth">0</span>u
               </span>
               <span class="summary-pill" style="background:transparent;border:1px solid #1f2937;color:var(--text-muted);">
-                Totaal uren (alles): <span id="totalHoursAll">0</span>
+                Totaal: <span id="totalHoursAll">0</span>u
               </span>
             </div>
           </div>
 
-          <table class="table-surface">
-            <thead>
-              <tr>
-                <th class="sortable" data-sort="date">Datum</th>
-                <th class="sortable" data-sort="start">Start</th>
-                <th class="sortable" data-sort="end">Eind</th>
-                <th class="sortable" data-sort="hours">Uren</th>
-                <th>Omschrijving</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="hoursTableBody"></tbody>
-          </table>
+          <div class="table-wrapper">
+            <table class="table-surface">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="date">Datum</th>
+                  <th class="sortable" data-sort="start">Start</th>
+                  <th class="sortable" data-sort="end">Eind</th>
+                  <th class="sortable" data-sort="hours">Uren</th>
+                  <th>Omschrijving</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="hoursTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
