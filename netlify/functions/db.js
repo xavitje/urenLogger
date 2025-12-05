@@ -19,4 +19,3 @@ async function getDb() {
 }
 
 module.exports = { getDb };
-// mongodb+srv://rafielidrissi_db_user:rafi2506@urenlogs.hvewub6.mongodb.net/?appName=urenLogs
