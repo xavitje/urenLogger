@@ -146,6 +146,12 @@ button {
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+/* Alleen appearance: none voor text inputs (niet date/time!) */
+.input[type="text"],
+.input[type="email"],
+.input[type="password"] {
   -webkit-appearance: none;
   appearance: none;
 }
@@ -167,9 +173,7 @@ button {
 .input[type="date"],
 .input[type="time"],
 .input[type="month"] {
-  color-scheme: dark;  /* Dit is het belangrijkste! */
-  -webkit-appearance: none;  /* Reset default styling */
-  appearance: none;
+  color-scheme: dark;
 }
 
 /* Icon styling (desktop Chrome/Edge only) */
