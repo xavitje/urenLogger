@@ -3,163 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Uren Tracker</title>
-  <!-- Link naar een modern Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #4CAF50; /* Groen */
-      --secondary-color: #333;
-      --background-color: #f4f7f6;
-      --card-bg: #ffffff;
-      --text-color: #444;
-      --border-radius: 8px;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-    h1 {
-      color: var(--secondary-color);
-      margin-bottom: 20px;
-    }
-    section {
-      background-color: var(--card-bg);
-      padding: 30px;
-      margin-bottom: 20px;
-      border-radius: var(--border-radius);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      width: 100%;
-      max-width: 800px; /* Iets breder voor de tabel */
-    }
-    input[type="email"],
-    input[type="password"],
-    input[type="date"],
-    input[type="time"],
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0 15px 0;
-      display: inline-block;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-    /* Grid voor de invoervelden in de uren sectie */
-    .time-inputs {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-    }
-    .time-inputs input {
-        margin-top: 0;
-        margin-bottom: 15px;
-    }
-    button {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      transition: background-color 0.3s;
-      margin-right: 10px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    button.delete-btn {
-        background-color: #f44336;
-        padding: 8px 12px;
-    }
-    button.delete-btn:hover {
-        background-color: #da190b;
-    }
-    #authMessage {
-      margin-top: 15px;
-      font-weight: 600;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-    th {
-      background-color: #eee;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    tfoot th {
-        background-color: #e0e0e0;
-        font-size: 1.1em;
-    }
-  </style>
+  <title>Urenlogger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Uren Tracker</h1>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>Urenlogger</h1>
+      <p>Log je werkuren overzichtelijk per dag en maand.</p>
+    </header>
 
-  <section id="auth">
-    <h2>Account</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Wachtwoord">
+    <main class="app-main">
+      <!-- Login/Register Card -->
+      <section class="card auth-card">
+        <h2>Account</h2>
+        <div class="form-row vertical">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" placeholder="jouw@email.nl" class="input">
+        </div>
+        <div class="form-row vertical">
+          <label for="password">Wachtwoord</label>
+          <input id="password" type="password" placeholder="Wachtwoord" class="input">
+        </div>
+        <div class="form-row">
+          <button id="registerBtn" class="button">Registreren</button>
+          <button id="loginBtn" class="button secondary">Inloggen</button>
+          <button id="logoutBtn" class="button danger" style="display:none;">Uitloggen</button>
+        </div>
+        <p id="authMessage"></p>
+      </section>
 
-    <div>
-      <button id="registerBtn">Registreren</button>
-      <button id="loginBtn">Inloggen</button>
-      <button id="logoutBtn" style="display:none;">Uitloggen</button>
-    </div>
+      <!-- Hours Section Card -->
+      <section class="card hours-card" id="hoursSection" style="display:none;">
+        <h2>Uren invoeren</h2>
+        <div class="form-row">
+          <div style="flex:1;">
+            <label for="date">Datum</label>
+            <input id="date" type="date" class="input">
+          </div>
+          <div style="flex:1;">
+            <label for="startTime">Starttijd</label>
+            <input id="startTime" type="time" class="input">
+          </div>
+          <div style="flex:1;">
+            <label for="endTime">Eindtijd</label>
+            <input id="endTime" type="time" class="input">
+          </div>
+        </div>
+        <div class="form-row vertical">
+          <label for="description">Omschrijving (optioneel)</label>
+          <input id="description" type="text" placeholder="Wat heb je gedaan?" class="input">
+        </div>
+        <div class="form-row">
+          <button id="addHoursBtn" class="button">Opslaan</button>
+        </div>
 
-    <p id="authMessage"></p>
-  </section>
+        <div class="table-shell">
+          <div class="table-toolbar">
+            <div class="table-toolbar-left">
+              <div class="month-filter">
+                <label for="monthSelect">Maand:</label>
+                <input id="monthSelect" type="month" class="input" style="width:auto;">
+              </div>
+            </div>
+            <div class="table-toolbar-right">
+              <span class="summary-pill">
+                Totaal uren (maand): <span id="totalHoursMonth">0</span>
+              </span>
+              <span class="summary-pill" style="background:transparent;border:1px solid #1f2937;color:var(--text-muted);">
+                Totaal uren (alles): <span id="totalHoursAll">0</span>
+              </span>
+            </div>
+          </div>
 
-  <section id="hoursSection" style="display:none;">
-    <h2>Uren Registreren</h2>
-    <div class="time-inputs">
-        <input id="date" type="date">
-        <input id="startTime" type="time">
-        <input id="endTime" type="time">
-    </div>
-    
-    <input id="description" type="text" placeholder="Omschrijving van Activiteit">
-    <button id="addHoursBtn">Uren Opslaan</button>
-
-    <h2>Geregistreerde Uren</h2>
-    <table>
-      <thead>
-        <tr>
-            <th>Datum</th>
-            <th>Starttijd</th>
-            <th>Eindtijd</th>
-            <th>Uren (berekend)</th>
-            <th>Omschrijving</th>
-            <th>Actie</th>
-        </tr>
-      </thead>
-      <tbody id="hoursTableBody"></tbody>
-      <tfoot>
-        <tr>
-            <th colspan="3" style="text-align: right;">TOTAAL UREN:</th>
-            <th id="totalHours" colspan="2">0.00</th>
-            <th></th>
-        </tr>
-      </tfoot>
-    </table>
-  </section>
+          <table class="table-surface">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="date">Datum</th>
+                <th class="sortable" data-sort="start">Start</th>
+                <th class="sortable" data-sort="end">Eind</th>
+                <th class="sortable" data-sort="hours">Uren</th>
+                <th>Omschrijving</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="hoursTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>

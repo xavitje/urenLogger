@@ -1,15 +1,12 @@
-const API_BASE = '/api'; // via netlify.toml redirect
-
+const API_BASE = '/api';
 let token = localStorage.getItem('token') || null;
 
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const authMessage = document.getElementById('authMessage');
-
 const registerBtn = document.getElementById('registerBtn');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
-
 const hoursSection = document.getElementById('hoursSection');
 const dateInput = document.getElementById('date');
 const startTimeInput = document.getElementById('startTime');
@@ -17,26 +14,30 @@ const endTimeInput = document.getElementById('endTime');
 const descriptionInput = document.getElementById('description');
 const addHoursBtn = document.getElementById('addHoursBtn');
 const hoursTableBody = document.getElementById('hoursTableBody');
-const totalHoursCell = document.getElementById('totalHours');
+const monthInput = document.getElementById('monthSelect');
+const totalHoursMonthEl = document.getElementById('totalHoursMonth');
+const totalHoursAllEl = document.getElementById('totalHoursAll');
+
+let allRows = [];
+let currentSort = { by: 'date', dir: 'desc' };
 
 // Stel de datum van vandaag in als standaard
 dateInput.valueAsDate = new Date();
+monthInput.value = new Date().toISOString().slice(0, 7); // yyyy-MM
 
 function updateUI() {
   if (token) {
     hoursSection.style.display = 'block';
-    logoutBtn.style.display = 'inline-block';
-    // Verberg de login/register knoppen als je ingelogd bent
+    logoutBtn.style.display = 'inline-flex';
     registerBtn.style.display = 'none';
     loginBtn.style.display = 'none';
-    
     authMessage.textContent = 'Ingelogd. Welkom!';
     loadHours();
   } else {
     hoursSection.style.display = 'none';
     logoutBtn.style.display = 'none';
-    registerBtn.style.display = 'inline-block';
-    loginBtn.style.display = 'inline-block';
+    registerBtn.style.display = 'inline-flex';
+    loginBtn.style.display = 'inline-flex';
     authMessage.textContent = 'Log in of registreer om verder te gaan.';
   }
 }
@@ -52,18 +53,15 @@ function setToken(newToken) {
 }
 
 // --- API Functies ---
-
 async function register() {
   const email = emailInput.value;
   const password = passwordInput.value;
   authMessage.textContent = 'Bezig met registreren...';
-  
   const res = await fetch(`${API_BASE}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
   });
-  
   const data = await res.json();
   if (res.ok && data.token) {
     setToken(data.token);
@@ -77,7 +75,6 @@ async function login() {
   const email = emailInput.value;
   const password = passwordInput.value;
   authMessage.textContent = 'Bezig met inloggen...';
-
   const res = await fetch(`${API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -97,14 +94,11 @@ async function addHours() {
     authMessage.textContent = 'Eerst inloggen';
     return;
   }
-  
   if (!dateInput.value || !startTimeInput.value || !endTimeInput.value) {
-      authMessage.textContent = 'Vul datum, starttijd en eindtijd in.';
-      return;
+    authMessage.textContent = 'Vul datum, starttijd en eindtijd in.';
+    return;
   }
-  
   authMessage.textContent = 'Bezig met opslaan...';
-
   const res = await fetch(`${API_BASE}/addHours`, {
     method: 'POST',
     headers: {
@@ -122,10 +116,8 @@ async function addHours() {
   if (!res.ok) {
     authMessage.textContent = data.error || 'Opslaan mislukt. Zorg ervoor dat de eindtijd na de starttijd ligt.';
   } else {
-    // Reset inputs en update tabel
-    // dateInput.value = ''; // Datum laten staan
-    // startTimeInput.value = ''; // Tijd laten staan
-    // endTimeInput.value = '';
+    startTimeInput.value = '';
+    endTimeInput.value = '';
     descriptionInput.value = '';
     authMessage.textContent = 'Uren succesvol opgeslagen.';
     loadHours();
@@ -133,101 +125,149 @@ async function addHours() {
 }
 
 async function deleteHour(id) {
-    // Gebruik een custom modal of confirm voor eenvoud
-    if (!token || !window.confirm('Weet je zeker dat je deze urenregistratie wilt verwijderen?')) return;
-
-    authMessage.textContent = 'Bezig met verwijderen...';
-
-    const res = await fetch(`${API_BASE}/deleteHour`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ id }) // Stuur de MongoDB ID mee
-    });
-    const data = await res.json();
-    if (res.ok) {
-        authMessage.textContent = 'Registratie succesvol verwijderd.';
-        loadHours();
-    } else if (res.status === 401) {
-        setToken(null);
-        authMessage.textContent = 'Sessie verlopen. Gelieve opnieuw in te loggen.';
-    } else {
-        authMessage.textContent = data.error || 'Verwijderen mislukt.';
-    }
+  if (!token || !window.confirm('Weet je zeker dat je deze urenregistratie wilt verwijderen?')) return;
+  authMessage.textContent = 'Bezig met verwijderen...';
+  const res = await fetch(`${API_BASE}/deleteHour`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify({ id })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    authMessage.textContent = 'Registratie succesvol verwijderd.';
+    loadHours();
+  } else if (res.status === 401) {
+    setToken(null);
+    authMessage.textContent = 'Sessie verlopen. Gelieve opnieuw in te loggen.';
+  } else {
+    authMessage.textContent = data.error || 'Verwijderen mislukt.';
+  }
 }
-
 
 async function loadHours() {
   if (!token) return;
   const res = await fetch(`${API_BASE}/getHours`, {
     headers: { 'Authorization': 'Bearer ' + token }
   });
-  
-  if (res.status === 401) { 
-      setToken(null);
-      return;
+  if (res.status === 401) {
+    setToken(null);
+    return;
   }
-
   const data = await res.json();
   if (!res.ok) {
     authMessage.textContent = data.error || 'Ophalen mislukt';
     return;
   }
-  
-  hoursTableBody.innerHTML = '';
-  let totalHours = 0; // Totaal uren teller
-  
-  // Sorteer de uren op datum (meest recente eerst)
-  data.sort((a, b) => new Date(b.date) - new Date(a.date));
+  allRows = data;
+  renderTable();
+}
 
-  data.forEach(row => {
-    const tr = document.createElement('tr');
-    
-    // Gebruik de startTijd en eindTijd van MongoDB, dit zijn ISO strings
+function renderTable() {
+  hoursTableBody.innerHTML = '';
+
+  if (!allRows || allRows.length === 0) {
+    totalHoursMonthEl.textContent = '0';
+    totalHoursAllEl.textContent = '0';
+    return;
+  }
+
+  const monthValue = monthInput.value; // 'yyyy-mm'
+  const [yearStr, monthStr] = monthValue.split('-');
+  const selectedYear = parseInt(yearStr, 10);
+  const selectedMonthIdx = parseInt(monthStr, 10) - 1;
+
+  let totalAll = 0;
+  let totalMonth = 0;
+
+  // sorteer
+  const sorted = [...allRows].sort((a, b) => {
+    const aDate = new Date(a.date);
+    const bDate = new Date(b.date);
+
+    if (currentSort.by === 'date') {
+      return currentSort.dir === 'asc' ? aDate - bDate : bDate - aDate;
+    } else if (currentSort.by === 'hours') {
+      return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
+    } else if (currentSort.by === 'start') {
+      const aStart = new Date(a.startTime);
+      const bStart = new Date(b.startTime);
+      return currentSort.dir === 'asc' ? aStart - bStart : bStart - aStart;
+    } else if (currentSort.by === 'end') {
+      const aEnd = new Date(a.endTime);
+      const bEnd = new Date(b.endTime);
+      return currentSort.dir === 'asc' ? aEnd - bEnd : bEnd - aEnd;
+    }
+    return 0;
+  });
+
+  sorted.forEach(row => {
     const startObj = new Date(row.startTime);
     const endObj = new Date(row.endTime);
-    
-    // Formatteer de datum 
-    const formattedDate = startObj.toLocaleDateString('nl-NL', { year: 'numeric', month: 'short', day: 'numeric' });
-    
-    // Formatteer de tijd
+    const rowDate = new Date(row.date);
+
+    const formattedDate = rowDate.toLocaleDateString('nl-NL', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
     const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
     const startTimeFormatted = startObj.toLocaleTimeString('nl-NL', timeOptions);
     const endTimeFormatted = endObj.toLocaleTimeString('nl-NL', timeOptions);
 
-    totalHours += row.hours; // Totaal optellen
+    totalAll += row.hours;
 
-    tr.innerHTML = `
-      <td>${formattedDate}</td>
-      <td>${startTimeFormatted}</td>
-      <td>${endTimeFormatted}</td>
-      <td>${row.hours.toFixed(2)}</td>
-      <td>${row.description || '—'}</td>
-      <td><button class="delete-btn" data-id="${row._id}">Verwijder</button></td>
-    `;
-    hoursTableBody.appendChild(tr);
+    if (rowDate.getFullYear() === selectedYear && rowDate.getMonth() === selectedMonthIdx) {
+      totalMonth += row.hours;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${formattedDate}</td>
+        <td>${startTimeFormatted}</td>
+        <td>${endTimeFormatted}</td>
+        <td>${row.hours.toFixed(2)}</td>
+        <td>${row.description || ''}</td>
+        <td class="actions-cell">
+          <button class="button small danger" data-id="${row._id}">Verwijder</button>
+        </td>
+      `;
+      hoursTableBody.appendChild(tr);
+    }
   });
 
-  // Update de totaalrij
-  totalHoursCell.textContent = totalHours.toFixed(2);
+  totalHoursMonthEl.textContent = totalMonth.toFixed(2);
+  totalHoursAllEl.textContent = totalAll.toFixed(2);
 
-  // Voeg event listeners toe aan de nieuwe delete knoppen
-  document.querySelectorAll('.delete-btn').forEach(button => {
-      button.addEventListener('click', (e) => {
-          // Haal de MongoDB ID op die we in de data-id hebben gezet
-          const id = e.target.getAttribute('data-id'); 
-          deleteHour(id);
-      });
+  // click‑handlers voor delete per rij
+  hoursTableBody.querySelectorAll('button[data-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      deleteHour(id);
+    });
   });
 }
 
-// --- Event Listeners ---
+// Event listeners
 registerBtn.addEventListener('click', register);
 loginBtn.addEventListener('click', login);
 logoutBtn.addEventListener('click', () => setToken(null));
 addHoursBtn.addEventListener('click', addHours);
+monthInput.addEventListener('change', renderTable);
+
+document.querySelectorAll('.table-surface th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const sortKey = th.dataset.sort;
+    if (!sortKey) return;
+
+    if (currentSort.by === sortKey) {
+      currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort.by = sortKey;
+      currentSort.dir = 'asc';
+    }
+    renderTable();
+  });
+});
 
 // init
 updateUI();
