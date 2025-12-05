@@ -17,5 +17,4 @@ async function getDb() {
   db = client.db('urenLogger');
   return db;
 }
-
 module.exports = { getDb };
