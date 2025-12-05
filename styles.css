@@ -167,9 +167,12 @@ button {
 .input[type="date"],
 .input[type="time"],
 .input[type="month"] {
-  color-scheme: dark;
+  color-scheme: dark;  /* Dit is het belangrijkste! */
+  -webkit-appearance: none;  /* Reset default styling */
+  appearance: none;
 }
 
+/* Icon styling (desktop Chrome/Edge only) */
 .input::-webkit-calendar-picker-indicator {
   filter: invert(0.9);
   cursor: pointer;
@@ -180,6 +183,7 @@ button {
   opacity: 1;
 }
 
+/* Text color binnen input (desktop + Android Chrome) */
 .input::-webkit-datetime-edit {
   color: var(--text-main);
 }
