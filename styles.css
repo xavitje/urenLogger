@@ -394,6 +394,35 @@ button {
   white-space: nowrap;
 }
 
+/* Inline editing */
+
+.table-surface td.editable {
+  cursor: pointer;
+  position: relative;
+}
+
+.table-surface td.editable:hover {
+  background: rgba(34, 197, 94, 0.1) !important;
+  outline: 1px solid var(--accent);
+}
+
+.inline-edit-input {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  font-size: 0.875rem;
+  border-radius: 4px;
+  outline: none;
+}
+
+.inline-edit-input:focus {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
 /* Summary pill */
 
 .summary-pill {

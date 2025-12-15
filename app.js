@@ -125,6 +125,29 @@ async function addHours() {
   }
 }
 
+async function updateHour(id, date, startTime, endTime, description) {
+  if (!token) return;
+  authMessage.textContent = 'Bezig met bijwerken...';
+  const res = await fetch(`${API_BASE}/updateHour`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify({ id, date, startTime, endTime, description })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    authMessage.textContent = 'Succesvol bijgewerkt.';
+    loadHours();
+  } else if (res.status === 401) {
+    setToken(null);
+    authMessage.textContent = 'Sessie verlopen. Gelieve opnieuw in te loggen.';
+  } else {
+    authMessage.textContent = data.error || 'Bijwerken mislukt.';
+  }
+}
+
 async function deleteHour(id) {
   if (!token || !window.confirm('Weet je zeker dat je deze urenregistratie wilt verwijderen?')) return;
   authMessage.textContent = 'Bezig met verwijderen...';
@@ -193,28 +216,24 @@ function renderTable() {
     } else if (currentSort.by === 'hours') {
       return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
     } else if (currentSort.by === 'start') {
-      const aStart = new Date(a.startTime);
-      const bStart = new Date(b.startTime);
-      return currentSort.dir === 'asc' ? aStart - bStart : bStart - aStart;
+      // Vergelijk tijden als strings (werkt omdat formaat HH:MM is)
+      return currentSort.dir === 'asc' ? 
+        a.startTime.localeCompare(b.startTime) : 
+        b.startTime.localeCompare(a.startTime);
     } else if (currentSort.by === 'end') {
-      const aEnd = new Date(a.endTime);
-      const bEnd = new Date(b.endTime);
-      return currentSort.dir === 'asc' ? aEnd - bEnd : bEnd - aEnd;
+      return currentSort.dir === 'asc' ? 
+        a.endTime.localeCompare(b.endTime) : 
+        b.endTime.localeCompare(a.endTime);
     }
     return 0;
   });
 
   sorted.forEach(row => {
-    const startObj = new Date(row.startTime);
-    const endObj = new Date(row.endTime);
     const rowDate = new Date(row.date);
 
     const formattedDate = rowDate.toLocaleDateString('nl-NL', {
       year: 'numeric', month: 'short', day: 'numeric'
     });
-    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
-    const startTimeFormatted = startObj.toLocaleTimeString('nl-NL', timeOptions);
-    const endTimeFormatted = endObj.toLocaleTimeString('nl-NL', timeOptions);
 
     totalAll += row.hours;
 
@@ -222,12 +241,18 @@ function renderTable() {
       totalMonth += row.hours;
 
       const tr = document.createElement('tr');
+      tr.dataset.id = row._id;
+      tr.dataset.date = row.date.split('T')[0];
+      tr.dataset.startTime = row.startTime;
+      tr.dataset.endTime = row.endTime;
+      tr.dataset.description = row.description || '';
+      
       tr.innerHTML = `
-        <td>${formattedDate}</td>
-        <td>${startTimeFormatted}</td>
-        <td>${endTimeFormatted}</td>
+        <td class="editable" data-field="date">${formattedDate}</td>
+        <td class="editable" data-field="startTime">${row.startTime}</td>
+        <td class="editable" data-field="endTime">${row.endTime}</td>
         <td>${row.hours.toFixed(2)}</td>
-        <td>${row.description || ''}</td>
+        <td class="editable" data-field="description">${row.description || ''}</td>
         <td class="actions-cell">
           <button class="button small danger" data-id="${row._id}">Verwijder</button>
         </td>
@@ -244,6 +269,62 @@ function renderTable() {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
       deleteHour(id);
+    });
+  });
+
+  // Inline editing voor cellen
+  hoursTableBody.querySelectorAll('td.editable').forEach(cell => {
+    cell.addEventListener('click', function() {
+      if (this.querySelector('input')) return; // Al in edit mode
+      
+      const field = this.dataset.field;
+      const tr = this.closest('tr');
+      const currentValue = field === 'date' ? tr.dataset.date : 
+                          field === 'startTime' ? tr.dataset.startTime :
+                          field === 'endTime' ? tr.dataset.endTime :
+                          tr.dataset.description;
+      
+      let inputType = 'text';
+      if (field === 'date') inputType = 'date';
+      else if (field === 'startTime' || field === 'endTime') inputType = 'time';
+      
+      const input = document.createElement('input');
+      input.type = inputType;
+      input.value = currentValue;
+      input.className = 'inline-edit-input';
+      
+      const originalContent = this.innerHTML;
+      this.innerHTML = '';
+      this.appendChild(input);
+      input.focus();
+      
+      const saveEdit = async () => {
+        const newValue = input.value;
+        if (!newValue || newValue === currentValue) {
+          this.innerHTML = originalContent;
+          return;
+        }
+        
+        // Update dataset
+        if (field === 'date') tr.dataset.date = newValue;
+        else if (field === 'startTime') tr.dataset.startTime = newValue;
+        else if (field === 'endTime') tr.dataset.endTime = newValue;
+        else tr.dataset.description = newValue;
+        
+        // Verstuur update naar server
+        const id = tr.dataset.id;
+        await updateHour(id, tr.dataset.date, tr.dataset.startTime, tr.dataset.endTime, tr.dataset.description);
+      };
+      
+      input.addEventListener('blur', saveEdit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveEdit();
+        } else if (e.key === 'Escape') {
+          this.innerHTML = originalContent;
+        }
+      });
     });
   });
 }
@@ -276,13 +357,13 @@ function copyTableData() {
     } else if (currentSort.by === 'hours') {
       return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
     } else if (currentSort.by === 'start') {
-      const aStart = new Date(a.startTime);
-      const bStart = new Date(b.startTime);
-      return currentSort.dir === 'asc' ? aStart - bStart : bStart - aStart;
+      return currentSort.dir === 'asc' ? 
+        a.startTime.localeCompare(b.startTime) : 
+        b.startTime.localeCompare(a.startTime);
     } else if (currentSort.by === 'end') {
-      const aEnd = new Date(a.endTime);
-      const bEnd = new Date(b.endTime);
-      return currentSort.dir === 'asc' ? aEnd - bEnd : bEnd - aEnd;
+      return currentSort.dir === 'asc' ? 
+        a.endTime.localeCompare(b.endTime) : 
+        b.endTime.localeCompare(a.endTime);
     }
     return 0;
   });
@@ -291,18 +372,13 @@ function copyTableData() {
   let text = 'Datum\tStart\tEind\tUren\tOmschrijving\n';
   
   sorted.forEach(row => {
-    const startObj = new Date(row.startTime);
-    const endObj = new Date(row.endTime);
     const rowDate = new Date(row.date);
 
     const formattedDate = rowDate.toLocaleDateString('nl-NL', {
       year: 'numeric', month: 'short', day: 'numeric'
     });
-    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
-    const startTimeFormatted = startObj.toLocaleTimeString('nl-NL', timeOptions);
-    const endTimeFormatted = endObj.toLocaleTimeString('nl-NL', timeOptions);
 
-    text += `${formattedDate}\t${startTimeFormatted}\t${endTimeFormatted}\t${row.hours.toFixed(2)}\t${row.description || ''}\n`;
+    text += `${formattedDate}\t${row.startTime}\t${row.endTime}\t${row.hours.toFixed(2)}\t${row.description || ''}\n`;
   });
 
   // Kopieer naar klembord
