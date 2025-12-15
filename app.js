@@ -18,9 +18,28 @@ const monthInput = document.getElementById('monthSelect');
 const totalHoursMonthEl = document.getElementById('totalHoursMonth');
 const totalHoursAllEl = document.getElementById('totalHoursAll');
 const copyBtn = document.getElementById('copyBtn');
+const migrateBtn = document.getElementById('migrateBtn');
 
 let allRows = [];
 let currentSort = { by: 'date', dir: 'desc' };
+
+// Helper functie om tijd te normaliseren naar HH:MM formaat
+function normalizeTime(timeValue) {
+  if (!timeValue) return '00:00';
+  // Als het al een string in HH:MM formaat is
+  if (typeof timeValue === 'string' && timeValue.match(/^\d{2}:\d{2}$/)) {
+    return timeValue;
+  }
+  // Als het een ISO string of Date object is
+  try {
+    const date = new Date(timeValue);
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  } catch (e) {
+    return '00:00';
+  }
+}
 
 // Stel de datum van vandaag in als standaard
 dateInput.valueAsDate = new Date();
@@ -125,6 +144,35 @@ async function addHours() {
   }
 }
 
+async function migrateOldData() {
+  if (!token) return;
+  if (!window.confirm('Dit zet oude Date tijden om naar HH:MM formaat. Dit hoef je maar 1x te doen. Doorgaan?')) return;
+  
+  authMessage.textContent = 'Bezig met migreren...';
+  migrateBtn.disabled = true;
+  
+  const res = await fetch(`${API_BASE}/migrateTime`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    }
+  });
+  
+  const data = await res.json();
+  migrateBtn.disabled = false;
+  
+  if (res.ok) {
+    authMessage.textContent = `Migratie voltooid! ${data.migrated} records gemigreerd, ${data.skipped} al correct.`;
+    loadHours();
+  } else if (res.status === 401) {
+    setToken(null);
+    authMessage.textContent = 'Sessie verlopen. Gelieve opnieuw in te loggen.';
+  } else {
+    authMessage.textContent = data.error || 'Migratie mislukt.';
+  }
+}
+
 async function updateHour(id, date, startTime, endTime, description) {
   if (!token) return;
   authMessage.textContent = 'Bezig met bijwerken...';
@@ -216,14 +264,17 @@ function renderTable() {
     } else if (currentSort.by === 'hours') {
       return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
     } else if (currentSort.by === 'start') {
-      // Vergelijk tijden als strings (werkt omdat formaat HH:MM is)
+      const aStart = normalizeTime(a.startTime);
+      const bStart = normalizeTime(b.startTime);
       return currentSort.dir === 'asc' ? 
-        a.startTime.localeCompare(b.startTime) : 
-        b.startTime.localeCompare(a.startTime);
+        aStart.localeCompare(bStart) : 
+        bStart.localeCompare(aStart);
     } else if (currentSort.by === 'end') {
+      const aEnd = normalizeTime(a.endTime);
+      const bEnd = normalizeTime(b.endTime);
       return currentSort.dir === 'asc' ? 
-        a.endTime.localeCompare(b.endTime) : 
-        b.endTime.localeCompare(a.endTime);
+        aEnd.localeCompare(bEnd) : 
+        bEnd.localeCompare(aEnd);
     }
     return 0;
   });
@@ -240,17 +291,20 @@ function renderTable() {
     if (rowDate.getFullYear() === selectedYear && rowDate.getMonth() === selectedMonthIdx) {
       totalMonth += row.hours;
 
+      const normalizedStartTime = normalizeTime(row.startTime);
+      const normalizedEndTime = normalizeTime(row.endTime);
+
       const tr = document.createElement('tr');
       tr.dataset.id = row._id;
       tr.dataset.date = row.date.split('T')[0];
-      tr.dataset.startTime = row.startTime;
-      tr.dataset.endTime = row.endTime;
+      tr.dataset.startTime = normalizedStartTime;
+      tr.dataset.endTime = normalizedEndTime;
       tr.dataset.description = row.description || '';
       
       tr.innerHTML = `
         <td class="editable" data-field="date">${formattedDate}</td>
-        <td class="editable" data-field="startTime">${row.startTime}</td>
-        <td class="editable" data-field="endTime">${row.endTime}</td>
+        <td class="editable" data-field="startTime">${normalizedStartTime}</td>
+        <td class="editable" data-field="endTime">${normalizedEndTime}</td>
         <td>${row.hours.toFixed(2)}</td>
         <td class="editable" data-field="description">${row.description || ''}</td>
         <td class="actions-cell">
@@ -357,13 +411,17 @@ function copyTableData() {
     } else if (currentSort.by === 'hours') {
       return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
     } else if (currentSort.by === 'start') {
+      const aStart = normalizeTime(a.startTime);
+      const bStart = normalizeTime(b.startTime);
       return currentSort.dir === 'asc' ? 
-        a.startTime.localeCompare(b.startTime) : 
-        b.startTime.localeCompare(a.startTime);
+        aStart.localeCompare(bStart) : 
+        bStart.localeCompare(aStart);
     } else if (currentSort.by === 'end') {
+      const aEnd = normalizeTime(a.endTime);
+      const bEnd = normalizeTime(b.endTime);
       return currentSort.dir === 'asc' ? 
-        a.endTime.localeCompare(b.endTime) : 
-        b.endTime.localeCompare(a.endTime);
+        aEnd.localeCompare(bEnd) : 
+        bEnd.localeCompare(aEnd);
     }
     return 0;
   });
@@ -378,7 +436,10 @@ function copyTableData() {
       year: 'numeric', month: 'short', day: 'numeric'
     });
 
-    text += `${formattedDate}\t${row.startTime}\t${row.endTime}\t${row.hours.toFixed(2)}\t${row.description || ''}\n`;
+    const startTime = normalizeTime(row.startTime);
+    const endTime = normalizeTime(row.endTime);
+
+    text += `${formattedDate}\t${startTime}\t${endTime}\t${row.hours.toFixed(2)}\t${row.description || ''}\n`;
   });
 
   // Kopieer naar klembord
@@ -397,6 +458,7 @@ logoutBtn.addEventListener('click', () => setToken(null));
 addHoursBtn.addEventListener('click', addHours);
 monthInput.addEventListener('change', renderTable);
 copyBtn.addEventListener('click', copyTableData);
+migrateBtn.addEventListener('click', migrateOldData);
 
 document.querySelectorAll('.table-surface th.sortable').forEach(th => {
   th.addEventListener('click', () => {

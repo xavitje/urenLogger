@@ -40,9 +40,9 @@ exports.handler = async (event) => {
 
     await hoursCol.insertOne({
       userId: user.userId,
-      date: new Date(date), // Voor sortering
-      startTime: startTime, // Sla op als string "HH:MM"
-      endTime: endTime, // Sla op als string "HH:MM"
+      date: new Date(date),
+      startTime: startTime,
+      endTime: endTime,
       hours: hours,
       description: description || '',
       createdAt: new Date()
