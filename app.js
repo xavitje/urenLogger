@@ -17,6 +17,7 @@ const hoursTableBody = document.getElementById('hoursTableBody');
 const monthInput = document.getElementById('monthSelect');
 const totalHoursMonthEl = document.getElementById('totalHoursMonth');
 const totalHoursAllEl = document.getElementById('totalHoursAll');
+const copyBtn = document.getElementById('copyBtn');
 
 let allRows = [];
 let currentSort = { by: 'date', dir: 'desc' };
@@ -247,12 +248,79 @@ function renderTable() {
   });
 }
 
+// Functie om tabeldata te kopiëren
+function copyTableData() {
+  const monthValue = monthInput.value;
+  const [yearStr, monthStr] = monthValue.split('-');
+  const selectedYear = parseInt(yearStr, 10);
+  const selectedMonthIdx = parseInt(monthStr, 10) - 1;
+
+  // Filter rijen voor de geselecteerde maand
+  const filteredRows = allRows.filter(row => {
+    const rowDate = new Date(row.date);
+    return rowDate.getFullYear() === selectedYear && rowDate.getMonth() === selectedMonthIdx;
+  });
+
+  if (filteredRows.length === 0) {
+    authMessage.textContent = 'Geen gegevens om te kopiëren.';
+    return;
+  }
+
+  // Sorteer volgens huidige sorteerinstelling
+  const sorted = [...filteredRows].sort((a, b) => {
+    const aDate = new Date(a.date);
+    const bDate = new Date(b.date);
+
+    if (currentSort.by === 'date') {
+      return currentSort.dir === 'asc' ? aDate - bDate : bDate - aDate;
+    } else if (currentSort.by === 'hours') {
+      return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
+    } else if (currentSort.by === 'start') {
+      const aStart = new Date(a.startTime);
+      const bStart = new Date(b.startTime);
+      return currentSort.dir === 'asc' ? aStart - bStart : bStart - aStart;
+    } else if (currentSort.by === 'end') {
+      const aEnd = new Date(a.endTime);
+      const bEnd = new Date(b.endTime);
+      return currentSort.dir === 'asc' ? aEnd - bEnd : bEnd - aEnd;
+    }
+    return 0;
+  });
+
+  // Maak tekstversie met tabs voor Excel/spreadsheets
+  let text = 'Datum\tStart\tEind\tUren\tOmschrijving\n';
+  
+  sorted.forEach(row => {
+    const startObj = new Date(row.startTime);
+    const endObj = new Date(row.endTime);
+    const rowDate = new Date(row.date);
+
+    const formattedDate = rowDate.toLocaleDateString('nl-NL', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
+    const startTimeFormatted = startObj.toLocaleTimeString('nl-NL', timeOptions);
+    const endTimeFormatted = endObj.toLocaleTimeString('nl-NL', timeOptions);
+
+    text += `${formattedDate}\t${startTimeFormatted}\t${endTimeFormatted}\t${row.hours.toFixed(2)}\t${row.description || ''}\n`;
+  });
+
+  // Kopieer naar klembord
+  navigator.clipboard.writeText(text).then(() => {
+    authMessage.textContent = `${sorted.length} rij${sorted.length !== 1 ? 'en' : ''} gekopieerd naar klembord.`;
+  }).catch(err => {
+    console.error('Kopiëren mislukt:', err);
+    authMessage.textContent = 'Kopiëren mislukt. Zorg ervoor dat je toestemming hebt gegeven.';
+  });
+}
+
 // Event listeners
 registerBtn.addEventListener('click', register);
 loginBtn.addEventListener('click', login);
 logoutBtn.addEventListener('click', () => setToken(null));
 addHoursBtn.addEventListener('click', addHours);
 monthInput.addEventListener('change', renderTable);
+copyBtn.addEventListener('click', copyTableData);
 
 document.querySelectorAll('.table-surface th.sortable').forEach(th => {
   th.addEventListener('click', () => {

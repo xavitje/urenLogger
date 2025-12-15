@@ -20,10 +20,9 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'Datum, start- en eindtijd zijn vereist' }) };
     }
 
-    // Combineer datum en tijd om Date objecten te maken
-    // Zorg ervoor dat de tijd in UTC wordt opgeslagen om timezone problemen te voorkomen
-    const startDateTime = new Date(`${date}T${startTime}:00Z`);
-    const endDateTime = new Date(`${date}T${endTime}:00Z`);
+    // Combineer datum en tijd om Date objecten te maken (zonder timezone conversie)
+    const startDateTime = new Date(`${date}T${startTime}:00`);
+    const endDateTime = new Date(`${date}T${endTime}:00`);
 
     // Controleer of de eindtijd na de starttijd is
     if (endDateTime <= startDateTime) {
