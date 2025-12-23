@@ -302,6 +302,7 @@ function renderTable() {
       tr.dataset.description = row.description || '';
       
       tr.innerHTML = `
+        <td><input type="checkbox" class="row-checkbox" data-id="${row._id}"></td>
         <td class="editable" data-field="date">${formattedDate}</td>
         <td class="editable" data-field="startTime">${normalizedStartTime}</td>
         <td class="editable" data-field="endTime">${normalizedEndTime}</td>
@@ -385,53 +386,25 @@ function renderTable() {
 
 // Functie om tabeldata te kopiëren
 function copyTableData() {
-  const monthValue = monthInput.value;
-  const [yearStr, monthStr] = monthValue.split('-');
-  const selectedYear = parseInt(yearStr, 10);
-  const selectedMonthIdx = parseInt(monthStr, 10) - 1;
-
-  // Filter rijen voor de geselecteerde maand
-  const filteredRows = allRows.filter(row => {
-    const rowDate = new Date(row.date);
-    return rowDate.getFullYear() === selectedYear && rowDate.getMonth() === selectedMonthIdx;
-  });
-
-  if (filteredRows.length === 0) {
-    authMessage.textContent = 'Geen gegevens om te kopiëren.';
+  const selectedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+  
+  if (selectedCheckboxes.length === 0) {
+    authMessage.textContent = 'Selecteer eerst de rijen die je wilt kopiëren met de vinkjes.';
     return;
   }
 
-  // Sorteer volgens huidige sorteerinstelling
-  const sorted = [...filteredRows].sort((a, b) => {
-    const aDate = new Date(a.date);
-    const bDate = new Date(b.date);
+  const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+  
+  // Filter de rijen op basis van de geselecteerde ID's
+  const rowsToCopy = allRows.filter(row => selectedIds.includes(row._id));
 
-    if (currentSort.by === 'date') {
-      return currentSort.dir === 'asc' ? aDate - bDate : bDate - aDate;
-    } else if (currentSort.by === 'hours') {
-      return currentSort.dir === 'asc' ? a.hours - b.hours : b.hours - a.hours;
-    } else if (currentSort.by === 'start') {
-      const aStart = normalizeTime(a.startTime);
-      const bStart = normalizeTime(b.startTime);
-      return currentSort.dir === 'asc' ? 
-        aStart.localeCompare(bStart) : 
-        bStart.localeCompare(aStart);
-    } else if (currentSort.by === 'end') {
-      const aEnd = normalizeTime(a.endTime);
-      const bEnd = normalizeTime(b.endTime);
-      return currentSort.dir === 'asc' ? 
-        aEnd.localeCompare(bEnd) : 
-        bEnd.localeCompare(aEnd);
-    }
-    return 0;
-  });
+  // Sorteren op datum (zodat je output chronologisch is)
+  rowsToCopy.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Maak tekstversie met tabs voor Excel/spreadsheets
   let text = 'Datum\tStart\tEind\tUren\tOmschrijving\n';
   
-  sorted.forEach(row => {
+  rowsToCopy.forEach(row => {
     const rowDate = new Date(row.date);
-
     const formattedDate = rowDate.toLocaleDateString('nl-NL', {
       year: 'numeric', month: 'short', day: 'numeric'
     });
@@ -442,12 +415,10 @@ function copyTableData() {
     text += `${formattedDate}\t${startTime}\t${endTime}\t${row.hours.toFixed(2)}\t${row.description || ''}\n`;
   });
 
-  // Kopieer naar klembord
   navigator.clipboard.writeText(text).then(() => {
-    authMessage.textContent = `${sorted.length} rij${sorted.length !== 1 ? 'en' : ''} gekopieerd naar klembord.`;
+    authMessage.textContent = `${rowsToCopy.length} geselecteerde rijen gekopieerd naar klembord.`;
   }).catch(err => {
-    console.error('Kopiëren mislukt:', err);
-    authMessage.textContent = 'Kopiëren mislukt. Zorg ervoor dat je toestemming hebt gegeven.';
+    authMessage.textContent = 'Kopiëren mislukt.';
   });
 }
 
@@ -459,6 +430,12 @@ addHoursBtn.addEventListener('click', addHours);
 monthInput.addEventListener('change', renderTable);
 copyBtn.addEventListener('click', copyTableData);
 migrateBtn.addEventListener('click', migrateOldData);
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'selectAll') {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = e.target.checked);
+  }
+});
 
 document.querySelectorAll('.table-surface th.sortable').forEach(th => {
   th.addEventListener('click', () => {
