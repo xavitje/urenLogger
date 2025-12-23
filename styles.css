@@ -168,7 +168,18 @@ button {
   box-shadow: 0 0 0 1px var(--accent-soft);
   background: #020617;
 }
+input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
 
+.table-surface th:first-child, 
+.table-surface td:first-child {
+  padding-left: 12px;
+  width: 40px;
+}
 /* Dark styling voor date/time pickers */
 .input[type="date"],
 .input[type="time"],
