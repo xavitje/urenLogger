@@ -8,87 +8,116 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 Urenregistratie</h1>
-        
-        <div class="auth-section">
-            <input type="email" id="email" placeholder="Email" autocomplete="email">
-            <input type="password" id="password" placeholder="Wachtwoord" autocomplete="current-password">
-            <div class="button-group">
-                <button id="registerBtn" class="btn">Registreren</button>
-                <button id="loginBtn" class="btn">Inloggen</button>
+        <!-- Header -->
+        <header class="app-header">
+            <h1>⏱️ Urenregistratie</h1>
+            <p id="authMessage">Log in of registreer om verder te gaan.</p>
+        </header>
+
+        <!-- Auth Section -->
+        <section class="auth-card glass-card">
+            <div class="input-group">
+                <input type="email" id="email" class="modern-input" placeholder=" " autocomplete="email">
+                <label>Email</label>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" class="modern-input" placeholder=" " autocomplete="current-password">
+                <label>Wachtwoord</label>
+            </div>
+            <div class="button-row">
+                <button id="registerBtn" class="btn btn-primary">Registreren</button>
+                <button id="loginBtn" class="btn btn-primary">Inloggen</button>
                 <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Uitloggen</button>
             </div>
-            <p id="authMessage">Log in of registreer om verder te gaan.</p>
-        </div>
+        </section>
 
+        <!-- Main App -->
         <div id="hoursSection" style="display:none;">
-            <section class="input-section">
-                <h2>Uren toevoegen</h2>
-                <div class="form-group">
-                    <label for="date">Datum:</label>
-                    <input type="date" id="date">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="startTime">Starttijd:</label>
-                        <input type="time" id="startTime">
+            
+            <!-- Add Hours Card -->
+            <section class="glass-card">
+                <h2>➕ Uren toevoegen</h2>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <input type="date" id="date" class="modern-input" placeholder=" ">
+                        <label>Datum</label>
                     </div>
-                    <div class="form-group">
-                        <label for="endTime">Eindtijd:</label>
-                        <input type="time" id="endTime">
+                    <div class="input-group">
+                        <input type="time" id="startTime" class="modern-input" placeholder=" ">
+                        <label>Starttijd</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="time" id="endTime" class="modern-input" placeholder=" ">
+                        <label>Eindtijd</label>
+                    </div>
+                    <div class="input-group full-width">
+                        <input type="text" id="description" class="modern-input" placeholder=" ">
+                        <label>Omschrijving (bijv. Kantoor, Thuis, Project)</label>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="description">Omschrijving (optioneel):</label>
-                    <input type="text" id="description" placeholder="Bijv. Kantoor, Thuis, Project X">
-                </div>
-                <button id="addHoursBtn" class="btn">+ Uren toevoegen</button>
+                <button id="addHoursBtn" class="btn btn-primary btn-large">Uren opslaan</button>
             </section>
 
-            <section class="overview-section">
-                <h2>Overzicht</h2>
-                
-                <div class="period-selector">
-                    <div class="form-group">
-                        <label for="periodStart">Periode van:</label>
-                        <input type="date" id="periodStart">
-                    </div>
-                    <div class="form-group">
-                        <label for="periodEnd">Periode tot:</label>
-                        <input type="date" id="periodEnd">
+            <!-- Stats & Period Card -->
+            <section class="glass-card">
+                <div class="stats-header">
+                    <h2>📊 Overzicht</h2>
+                    <div class="period-inline">
+                        <div class="input-group compact">
+                            <input type="date" id="periodStart" class="modern-input" placeholder=" ">
+                            <label>Van</label>
+                        </div>
+                        <span class="period-separator">→</span>
+                        <div class="input-group compact">
+                            <input type="date" id="periodEnd" class="modern-input" placeholder=" ">
+                            <label>Tot</label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="stats">
+                <div class="stats-grid">
                     <div class="stat-card">
-                        <span class="stat-label">Totaal uren (periode):</span>
-                        <span class="stat-value" id="totalHoursMonth">0</span>
+                        <div class="stat-icon">⏰</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Uren (periode)</span>
+                            <span class="stat-value" id="totalHoursMonth">0</span>
+                        </div>
                     </div>
                     <div class="stat-card">
-                        <span class="stat-label">Totaal uren (alles):</span>
-                        <span class="stat-value" id="totalHoursAll">0</span>
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Uren (totaal)</span>
+                            <span class="stat-value" id="totalHoursAll">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-card-earnings">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <span class="stat-label">Bruto verdiensten</span>
+                            <div id="totalEarnings" class="earnings-detail">€0.00</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="earnings-card">
-                    <div id="totalEarnings">Geen data</div>
+                <div class="action-row">
+                    <button id="copyBtn" class="btn btn-secondary">📋 Kopieer periode</button>
+                    <button id="migrateBtn" class="btn btn-tertiary">🔧 Migreer data</button>
                 </div>
+            </section>
 
-                <div class="button-group">
-                    <button id="copyBtn" class="btn btn-secondary">📋 Kopieer periode naar klembord</button>
-                    <button id="migrateBtn" class="btn btn-secondary">🔧 Migreer oude data (1x)</button>
-                </div>
-
-                <div class="table-wrapper">
-                    <table>
+            <!-- Table Card -->
+            <section class="glass-card table-card">
+                <h2>📝 Geregistreerde uren</h2>
+                <div class="table-container">
+                    <table class="modern-table">
                         <thead>
                             <tr>
-                                <th id="th-date" class="sortable">Datum ⇅</th>
-                                <th id="th-start" class="sortable">Start ⇅</th>
-                                <th id="th-end" class="sortable">Eind ⇅</th>
-                                <th id="th-hours" class="sortable">Uren ⇅</th>
+                                <th id="th-date" class="sortable">Datum</th>
+                                <th id="th-start" class="sortable">Start</th>
+                                <th id="th-end" class="sortable">Eind</th>
+                                <th id="th-hours" class="sortable">Uren</th>
                                 <th>Omschrijving</th>
-                                <th>Acties</th>
+                                <th class="actions-col">Acties</th>
                             </tr>
                         </thead>
                         <tbody id="hoursTableBody">
@@ -97,6 +126,7 @@
                     </table>
                 </div>
             </section>
+
         </div>
     </div>
 
