@@ -432,7 +432,7 @@ function copyHoursToClipboard() {
     });
 
     navigator.clipboard.writeText(text).then(() => {
-        alert(`${filteredRows.length} uren gekopieerd naar klembord (${periodStartInput.value} tot ${periodEndInput.value})`);
+        alert(`${filteredRows.length} dagen gekopieerd naar klembord (${periodStartInput.value} tot ${periodEndInput.value})`);
     }).catch(() => {
         alert('Kopiëren mislukt. Probeer nogmaals.');
     });
