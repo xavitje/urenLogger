@@ -21,6 +21,8 @@ const totalHoursAllEl = document.getElementById('totalHoursAll');
 const totalEarningsEl = document.getElementById('totalEarnings');
 const copyBtn = document.getElementById('copyBtn');
 const migrateBtn = document.getElementById('migrateBtn');
+const prevPeriodBtn = document.getElementById('prevPeriodBtn');
+const nextPeriodBtn = document.getElementById('nextPeriodBtn');
 
 let allRows = [];
 let currentSort = { by: 'date', dir: 'desc' };
@@ -51,12 +53,19 @@ function normalizeTime(timeValue) {
 // Stel de datum van vandaag in als standaard
 dateInput.valueAsDate = new Date();
 // Stel periode in op deze maand
-const today = new Date();
-const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-periodStartInput.value = firstDay.toISOString().slice(0, 10);
-periodEndInput.value = lastDay.toISOString().slice(0, 10);
+const storedStart = localStorage.getItem('periodStart');
+const storedEnd = localStorage.getItem('periodEnd');
 
+if (storedStart && storedEnd) {
+    periodStartInput.value = storedStart;
+    periodEndInput.value = storedEnd;
+} else {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    periodStartInput.value = firstDay.toISOString().slice(0, 10);
+    periodEndInput.value = lastDay.toISOString().slice(0, 10);
+}
 function updateUI() {
     if (token) {
         hoursSection.style.display = 'block';
@@ -277,6 +286,39 @@ function calculateEarnings(rows) {
     };
 }
 
+function savePeriod() {
+    localStorage.setItem('periodStart', periodStartInput.value);
+    localStorage.setItem('periodEnd', periodEndInput.value);
+}
+
+function shiftPeriod(direction) {
+    const start = new Date(periodStartInput.value);
+    const end = new Date(periodEndInput.value);
+    
+    // Bereken duur van huidige periode in milliseconden
+    const duration = end.getTime() - start.getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
+    
+    let newStart, newEnd;
+    
+    if (direction === 'next') {
+        // Nieuwe start is oude eind + 1 dag
+        newStart = new Date(end.getTime() + oneDay);
+        newEnd = new Date(newStart.getTime() + duration);
+    } else {
+        // Nieuwe eind is oude start - 1 dag
+        newEnd = new Date(start.getTime() - oneDay);
+        newStart = new Date(newEnd.getTime() - duration);
+    }
+    
+    // Zet waardes terug (toISOString pakt UTC, wat goed werkt voor YYYY-MM-DD strings)
+    periodStartInput.value = newStart.toISOString().slice(0, 10);
+    periodEndInput.value = newEnd.toISOString().slice(0, 10);
+    
+    savePeriod();
+    renderTable();
+}
+
 function renderTable() {
     hoursTableBody.innerHTML = '';
     if (!allRows || allRows.length === 0) {
@@ -432,7 +474,7 @@ function copyHoursToClipboard() {
     });
 
     navigator.clipboard.writeText(text).then(() => {
-        alert(`${filteredRows.length} uren gekopieerd naar klembord (${periodStartInput.value} tot ${periodEndInput.value})`);
+        alert(`${filteredRows.length} dagen gekopieerd naar klembord (${periodStartInput.value} tot ${periodEndInput.value})`);
     }).catch(() => {
         alert('Kopiëren mislukt. Probeer nogmaals.');
     });
@@ -448,8 +490,17 @@ logoutBtn.addEventListener('click', () => {
 addHoursBtn.addEventListener('click', addHours);
 copyBtn.addEventListener('click', copyHoursToClipboard);
 migrateBtn.addEventListener('click', migrateOldData);
-periodStartInput.addEventListener('change', renderTable);
-periodEndInput.addEventListener('change', renderTable);
+
+periodStartInput.addEventListener('change', () => {
+    savePeriod();
+    renderTable();
+});
+periodEndInput.addEventListener('change', () => {
+    savePeriod();
+    renderTable();
+});
+prevPeriodBtn.addEventListener('click', () => shiftPeriod('prev'));
+nextPeriodBtn.addEventListener('click', () => shiftPeriod('next'));
 
 // Sorteer headers
 document.getElementById('th-date').addEventListener('click', () => sortBy('date'));
