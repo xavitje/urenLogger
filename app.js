@@ -28,7 +28,7 @@ let allRows = [];
 let currentSort = { by: 'date', dir: 'desc' };
 
 // Constanten voor berekeningen
-const HOURLY_RATE = 8.87;
+const HOURLY_RATE = 16.35;
 const KM_RATE = 0.23;
 const OFFICE_KM = 62;
 
