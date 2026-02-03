@@ -14,13 +14,13 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { hourlyRate, kmRate } = JSON.parse(event.body || '{}');
+    const { hourlyRate, kmRate, kmRange } = JSON.parse(event.body || '{}');
 
-    if (typeof hourlyRate !== 'number' || typeof kmRate !== 'number') {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Uurloon en reiskostenvergoeding moeten getallen zijn.' }) };
+    if (typeof hourlyRate !== 'number' || typeof kmRate !== 'number' || typeof kmRange !== 'number') {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Alle velden moeten getallen zijn.' }) };
     }
 
-    if (hourlyRate < 0 || kmRate < 0) {
+    if (hourlyRate < 0 || kmRate < 0 || kmRange < 0) {
         return { statusCode: 400, body: JSON.stringify({ error: 'Waardes mogen niet negatief zijn.' }) };
     }
 
@@ -33,6 +33,7 @@ exports.handler = async (event) => {
         $set: {
           hourlyRate: hourlyRate,
           kmRate: kmRate,
+          kmRange: kmRange,
           settingsUpdatedAt: new Date()
         }
       }

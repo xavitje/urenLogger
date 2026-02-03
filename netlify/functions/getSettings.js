@@ -6,6 +6,7 @@ const { ObjectId } = require('mongodb');
 // Standaardwaarden voor het geval ze niet in de DB staan
 const DEFAULT_HOURLY_RATE = 16.35;
 const DEFAULT_KM_RATE = 0.23;
+const DEFAULT_KM_RANGE = 62;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -30,6 +31,7 @@ exports.handler = async (event) => {
     const settings = {
         hourlyRate: dbUser.hourlyRate || DEFAULT_HOURLY_RATE,
         kmRate: dbUser.kmRate || DEFAULT_KM_RATE,
+        kmRange: dbUser.kmRange || DEFAULT_KM_RANGE,
     };
 
     return {

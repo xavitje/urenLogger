@@ -348,7 +348,7 @@ function calculateEarnings(rows) {
     });
 
     const hourlyPay = totalHours * userSettings.hourlyRate;
-    const travelAllowance = officeDays * kmRange * userSettings.kmRate;
+    const travelAllowance = officeDays * userSettings.kmRange * userSettings.kmRate;
     const totalGross = hourlyPay + travelAllowance;
 
     return {
@@ -500,7 +500,7 @@ function renderTable() {
     totalEarningsEl.innerHTML = `
         <strong>Bruto verdiensten (periode):</strong><br>
         Uren: ${earnings.totalHours}u × €${earnings.hourlyRate.toFixed(2)} = €${earnings.hourlyPay}<br>
-        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${kmRange}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>
+        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${earnings.kmRange}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>
         <strong>Totaal bruto: €${earnings.totalGross}</strong>
     `;
 }

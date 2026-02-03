@@ -6,6 +6,7 @@ const { getDb } = require('./db');
 // Standaardwaarden voor nieuwe gebruikers
 const DEFAULT_HOURLY_RATE = 16.35;
 const DEFAULT_KM_RATE = 0.23;
+const DEFAULT_KM_RANGE = 62;
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -34,6 +35,7 @@ exports.handler = async (event) => {
       passwordHash: hash,
       hourlyRate: DEFAULT_HOURLY_RATE, // Standaard uurloon
       kmRate: DEFAULT_KM_RATE,         // Standaard km-vergoeding
+      kmRange: DEFAULT_KM_RANGE,       // Standaard aantal kilometers
       createdAt: new Date()
     });
 
