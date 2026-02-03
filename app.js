@@ -14,6 +14,7 @@ const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const hourlyRateInput = document.getElementById('hourlyRateInput');
 const kmRateInput = document.getElementById('kmRateInput');
+const kmRange = document.getElementById('kmRange');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const hoursSection = document.getElementById('hoursSection');
@@ -185,6 +186,7 @@ async function loadSettings() {
         // Update placeholders in de modal
         if (hourlyRateInput) hourlyRateInput.value = userSettings.hourlyRate;
         if (kmRateInput) kmRateInput.value = userSettings.kmRate;
+        if (kmRange) kmRange.value = userSettings.kmRate;
 
         // Herbereken de tabel met de nieuwe tarieven
         renderTable();
@@ -199,8 +201,9 @@ async function saveSettings() {
 
     const newHourlyRate = parseFloat(hourlyRateInput.value);
     const newKmRate = parseFloat(kmRateInput.value);
+    const newKmRange = parseFloat(kmRange.value)
 
-    if (isNaN(newHourlyRate) || isNaN(newKmRate) || newHourlyRate < 0 || newKmRate < 0) {
+    if (isNaN(newHourlyRate) || isNaN(newKmRate) || newHourlyRate < 0 || newKmRate < 0 || newKmRange < 0) {
         alert('Vul geldige, positieve getallen in voor de tarieven.');
         return;
     }
@@ -213,7 +216,7 @@ async function saveSettings() {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ hourlyRate: newHourlyRate, kmRate: newKmRate })
+            body: JSON.stringify({ hourlyRate: newHourlyRate, kmRate: newKmRate, kmRange: newKmRange})
         });
 
         const data = await res.json();
@@ -565,6 +568,7 @@ if (settingsBtn) {
         if (!settingsModal) return;
         hourlyRateInput.value = userSettings.hourlyRate;
         kmRateInput.value = userSettings.kmRate;
+        kmRange.value = userSettings.kmRange;
         settingsModal.style.display = 'block';
     });
 }
