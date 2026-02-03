@@ -3,6 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDb } = require('./db');
 
+// Standaardwaarden voor nieuwe gebruikers
+const DEFAULT_HOURLY_RATE = 16.35;
+const DEFAULT_KM_RATE = 0.23;
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -28,6 +32,8 @@ exports.handler = async (event) => {
     const result = await users.insertOne({
       email,
       passwordHash: hash,
+      hourlyRate: DEFAULT_HOURLY_RATE, // Standaard uurloon
+      kmRate: DEFAULT_KM_RATE,         // Standaard km-vergoeding
       createdAt: new Date()
     });
 

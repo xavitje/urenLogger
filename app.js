@@ -7,6 +7,15 @@ const authMessage = document.getElementById('authMessage');
 const registerBtn = document.getElementById('registerBtn');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+
+// Elementen voor instellingen Modal
+const settingsModal = document.getElementById('settingsModal');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const hourlyRateInput = document.getElementById('hourlyRateInput');
+const kmRateInput = document.getElementById('kmRateInput');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const hoursSection = document.getElementById('hoursSection');
 const dateInput = document.getElementById('date');
 const startTimeInput = document.getElementById('startTime');
@@ -27,9 +36,12 @@ const nextPeriodBtn = document.getElementById('nextPeriodBtn');
 let allRows = [];
 let currentSort = { by: 'date', dir: 'desc' };
 
+// Instellingen, worden geladen vanuit DB
+let userSettings = {
+    hourlyRate: 16.35,
+    kmRate: 0.23
+};
 // Constanten voor berekeningen
-const HOURLY_RATE = 16.35;
-const KM_RATE = 0.23;
 const OFFICE_KM = 62;
 
 // Helper functie om tijd te normaliseren naar HH:MM formaat
@@ -66,17 +78,45 @@ if (storedStart && storedEnd) {
     periodStartInput.value = firstDay.toISOString().slice(0, 10);
     periodEndInput.value = lastDay.toISOString().slice(0, 10);
 }
+
+// --- Thema Functies ---
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme');
+        if(themeToggleBtn) themeToggleBtn.textContent = '☀️ Wissel naar Licht Thema';
+    } else {
+        document.body.classList.add('light-theme');
+        document.body.classList.remove('dark-theme');
+        if(themeToggleBtn) themeToggleBtn.textContent = '🌙 Wissel naar Donker Thema';
+    }
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+}
+
+// Pas opgeslagen of standaard thema toe bij laden
+const savedTheme = localStorage.getItem('theme') || 'dark'; // Standaard donker
+applyTheme(savedTheme);
+
 function updateUI() {
     if (token) {
         hoursSection.style.display = 'block';
         logoutBtn.style.display = 'inline-flex';
+        if (settingsBtn) settingsBtn.style.display = 'inline-flex';
         registerBtn.style.display = 'none';
         loginBtn.style.display = 'none';
         authMessage.textContent = 'Ingelogd. Welkom!';
         loadHours();
+        loadSettings();
     } else {
         hoursSection.style.display = 'none';
         logoutBtn.style.display = 'none';
+        if (settingsBtn) settingsBtn.style.display = 'none';
         registerBtn.style.display = 'inline-flex';
         loginBtn.style.display = 'inline-flex';
         authMessage.textContent = 'Log in of registreer om verder te gaan.';
@@ -128,6 +168,62 @@ async function login() {
     } else {
         authMessage.textContent = data.error || 'Login mislukt (controleer gegevens)';
     }
+}
+
+async function loadSettings() {
+    if (!token) return;
+    try {
+        const res = await fetch(`${API_BASE}/getSettings`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+            throw new Error('Instellingen ophalen mislukt');
+        }
+        const settings = await res.json();
+        userSettings.hourlyRate = settings.hourlyRate;
+        userSettings.kmRate = settings.kmRate;
+
+        // Update placeholders in de modal
+        if (hourlyRateInput) hourlyRateInput.value = userSettings.hourlyRate;
+        if (kmRateInput) kmRateInput.value = userSettings.kmRate;
+
+        // Herbereken de tabel met de nieuwe tarieven
+        renderTable();
+    } catch (err) {
+        console.error(err);
+        authMessage.textContent = 'Kon instellingen niet laden.';
+    }
+}
+
+async function saveSettings() {
+    if (!token) return;
+
+    const newHourlyRate = parseFloat(hourlyRateInput.value);
+    const newKmRate = parseFloat(kmRateInput.value);
+
+    if (isNaN(newHourlyRate) || isNaN(newKmRate) || newHourlyRate < 0 || newKmRate < 0) {
+        alert('Vul geldige, positieve getallen in voor de tarieven.');
+        return;
+    }
+
+    authMessage.textContent = 'Instellingen opslaan...';
+    try {
+        const res = await fetch(`${API_BASE}/updateSettings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ hourlyRate: newHourlyRate, kmRate: newKmRate })
+        });
+
+        const data = await res.json();
+        if (!res.ok) { throw new Error(data.error || 'Opslaan van instellingen mislukt.'); }
+
+        authMessage.textContent = 'Instellingen succesvol opgeslagen.';
+        await loadSettings(); // Herlaad instellingen en render tabel opnieuw
+        if (settingsModal) settingsModal.style.display = 'none';
+    } catch (err) { authMessage.textContent = `Fout: ${err.message}`; }
 }
 
 async function addHours() {
@@ -265,24 +361,26 @@ function isOfficeDay(description) {
 function calculateEarnings(rows) {
     let totalHours = 0;
     let officeDays = 0;
-    
+
     rows.forEach(row => {
         totalHours += row.hours;
         if (isOfficeDay(row.description)) {
             officeDays++;
         }
     });
-    
-    const hourlyPay = totalHours * HOURLY_RATE;
-    const travelAllowance = officeDays * OFFICE_KM * KM_RATE;
+
+    const hourlyPay = totalHours * userSettings.hourlyRate;
+    const travelAllowance = officeDays * OFFICE_KM * userSettings.kmRate;
     const totalGross = hourlyPay + travelAllowance;
-    
+
     return {
         totalHours: totalHours.toFixed(2),
         hourlyPay: hourlyPay.toFixed(2),
         officeDays,
         travelAllowance: travelAllowance.toFixed(2),
-        totalGross: totalGross.toFixed(2)
+        totalGross: totalGross.toFixed(2),
+        hourlyRate: userSettings.hourlyRate,
+        kmRate: userSettings.kmRate
     };
 }
 
@@ -294,13 +392,13 @@ function savePeriod() {
 function shiftPeriod(direction) {
     const start = new Date(periodStartInput.value);
     const end = new Date(periodEndInput.value);
-    
+
     // Bereken duur van huidige periode in milliseconden
     const duration = end.getTime() - start.getTime();
     const oneDay = 24 * 60 * 60 * 1000;
-    
+
     let newStart, newEnd;
-    
+
     if (direction === 'next') {
         // Nieuwe start is oude eind + 1 dag
         newStart = new Date(end.getTime() + oneDay);
@@ -310,11 +408,11 @@ function shiftPeriod(direction) {
         newEnd = new Date(start.getTime() - oneDay);
         newStart = new Date(newEnd.getTime() - duration);
     }
-    
+
     // Zet waardes terug (toISOString pakt UTC, wat goed werkt voor YYYY-MM-DD strings)
     periodStartInput.value = newStart.toISOString().slice(0, 10);
     periodEndInput.value = newEnd.toISOString().slice(0, 10);
-    
+
     savePeriod();
     renderTable();
 }
@@ -419,11 +517,11 @@ function renderTable() {
     const earnings = calculateEarnings(filteredRows);
     totalHoursMonthEl.textContent = earnings.totalHours;
     totalHoursAllEl.textContent = totalAll.toFixed(2);
-    
+
     totalEarningsEl.innerHTML = `
         <strong>Bruto verdiensten (periode):</strong><br>
-        Uren: ${earnings.totalHours}u × €${HOURLY_RATE} = €${earnings.hourlyPay}<br>
-        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${OFFICE_KM}km × €${KM_RATE} = €${earnings.travelAllowance}<br>
+        Uren: ${earnings.totalHours}u × €${earnings.hourlyRate.toFixed(2)} = €${earnings.hourlyPay}<br>
+        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${OFFICE_KM}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>
         <strong>Totaal bruto: €${earnings.totalGross}</strong>
     `;
 }
@@ -486,6 +584,27 @@ loginBtn.addEventListener('click', login);
 logoutBtn.addEventListener('click', () => {
     setToken(null);
     authMessage.textContent = 'Uitgelogd.';
+});
+
+if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+        if (!settingsModal) return;
+        hourlyRateInput.value = userSettings.hourlyRate;
+        kmRateInput.value = userSettings.kmRate;
+        settingsModal.style.display = 'block';
+    });
+}
+if (closeSettingsBtn) {
+    closeSettingsBtn.addEventListener('click', () => { settingsModal.style.display = 'none'; });
+}
+if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener('click', saveSettings);
+}
+if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleTheme);
+}
+window.addEventListener('click', (event) => {
+    if (event.target === settingsModal) { settingsModal.style.display = 'none'; }
 });
 addHoursBtn.addEventListener('click', addHours);
 copyBtn.addEventListener('click', copyHoursToClipboard);
