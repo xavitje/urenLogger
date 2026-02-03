@@ -182,11 +182,12 @@ async function loadSettings() {
         const settings = await res.json();
         userSettings.hourlyRate = settings.hourlyRate;
         userSettings.kmRate = settings.kmRate;
+        userSettings.kmRange = settings.kmRange;
 
         // Update placeholders in de modal
         if (hourlyRateInput) hourlyRateInput.value = userSettings.hourlyRate;
         if (kmRateInput) kmRateInput.value = userSettings.kmRate;
-        if (kmRange) kmRange.value = userSettings.kmRate;
+        if (kmRange) kmRange.value = userSettings.kmRange;
 
         // Herbereken de tabel met de nieuwe tarieven
         renderTable();
@@ -357,7 +358,8 @@ function calculateEarnings(rows) {
         travelAllowance: travelAllowance.toFixed(2),
         totalGross: totalGross.toFixed(2),
         hourlyRate: userSettings.hourlyRate,
-        kmRate: userSettings.kmRate
+        kmRate: userSettings.kmRate,
+        kmRange: userSettings.kmRange
     };
 }
 
