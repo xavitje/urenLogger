@@ -29,7 +29,6 @@ const totalHoursMonthEl = document.getElementById('totalHoursMonth');
 const totalHoursAllEl = document.getElementById('totalHoursAll');
 const totalEarningsEl = document.getElementById('totalEarnings');
 const copyBtn = document.getElementById('copyBtn');
-const migrateBtn = document.getElementById('migrateBtn');
 const prevPeriodBtn = document.getElementById('prevPeriodBtn');
 const nextPeriodBtn = document.getElementById('nextPeriodBtn');
 
@@ -258,31 +257,6 @@ async function addHours() {
         descriptionInput.value = '';
         authMessage.textContent = 'Uren succesvol opgeslagen.';
         loadHours();
-    }
-}
-
-async function migrateOldData() {
-    if (!token) return;
-    if (!window.confirm('Dit zet oude Date tijden om naar HH:MM formaat. Dit hoef je maar 1x te doen. Doorgaan?')) return;
-    authMessage.textContent = 'Bezig met migreren...';
-    migrateBtn.disabled = true;
-    const res = await fetch(`${API_BASE}/migrateTime`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        }
-    });
-    const data = await res.json();
-    migrateBtn.disabled = false;
-    if (res.ok) {
-        authMessage.textContent = `Migratie voltooid! ${data.migrated} records gemigreerd, ${data.skipped} al correct.`;
-        loadHours();
-    } else if (res.status === 401) {
-        setToken(null);
-        authMessage.textContent = 'Sessie verlopen. Gelieve opnieuw in te loggen.';
-    } else {
-        authMessage.textContent = data.error || 'Migratie mislukt.';
     }
 }
 
@@ -608,7 +582,6 @@ window.addEventListener('click', (event) => {
 });
 addHoursBtn.addEventListener('click', addHours);
 copyBtn.addEventListener('click', copyHoursToClipboard);
-migrateBtn.addEventListener('click', migrateOldData);
 
 periodStartInput.addEventListener('change', () => {
     savePeriod();
