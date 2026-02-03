@@ -43,7 +43,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
-/* Voeg dit toe aan je CSS bestand */
 
 /* Thema's */
 body.light-theme {
@@ -62,7 +61,7 @@ body.light-theme .container, body.light-theme .modal-content {
 }
 
 body.dark-theme .container, body.dark-theme .modal-content {
-    background-color: #1e1e1e;
+    background-color: #0E1424;
     border: 1px solid #444;
 }
 
