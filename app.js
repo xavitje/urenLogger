@@ -39,10 +39,10 @@ let currentSort = { by: 'date', dir: 'desc' };
 // Instellingen, worden geladen vanuit DB
 let userSettings = {
     hourlyRate: 16.35,
-    kmRate: 0.23
+    kmRate: 0.23,
+    kmRange: 62
 };
 // Constanten voor berekeningen
-const OFFICE_KM = 62;
 
 // Helper functie om tijd te normaliseren naar HH:MM formaat
 function normalizeTime(timeValue) {
@@ -347,7 +347,7 @@ function calculateEarnings(rows) {
     });
 
     const hourlyPay = totalHours * userSettings.hourlyRate;
-    const travelAllowance = officeDays * OFFICE_KM * userSettings.kmRate;
+    const travelAllowance = officeDays * kmRange * userSettings.kmRate;
     const totalGross = hourlyPay + travelAllowance;
 
     return {
@@ -498,7 +498,7 @@ function renderTable() {
     totalEarningsEl.innerHTML = `
         <strong>Bruto verdiensten (periode):</strong><br>
         Uren: ${earnings.totalHours}u × €${earnings.hourlyRate.toFixed(2)} = €${earnings.hourlyPay}<br>
-        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${OFFICE_KM}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>
+        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${kmRange}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>
         <strong>Totaal bruto: €${earnings.totalGross}</strong>
     `;
 }
