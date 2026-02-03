@@ -10,10 +10,19 @@
     <div class="container">
         <!-- Header -->
         <header class="app-header">
-            <h1>⏱️ Urenregistratie</h1>
-            <p id="authMessage">Log in of registreer om verder te gaan.</p>
+            <div>
+                <h1>Uren Logger</h1>
+                <p>Jouw persoonlijke urenregistratie, simpel en snel.</p>
+            </div>
+            <div class="header-actions">
+                <span id="authMessage"></span>
+                <!-- De knoppen worden hier door JS getoond/verborgen -->
+                <button id="settingsBtn" class="btn btn-tertiary" style="display: none;">⚙️ Instellingen</button>
+                <button id="logoutBtn" class="btn btn-secondary" style="display: none;">Uitloggen</button>
+                <button id="loginBtn" class="btn btn-primary">Inloggen</button>
+                <button id="registerBtn" class="btn btn-secondary">Registreren</button>
+            </div>
         </header>
-
         <!-- Auth Section -->
         <section class="auth-card glass-card">
             <div class="input-group">
@@ -29,7 +38,6 @@
                 <button id="loginBtn" class="btn btn-primary">Inloggen</button>
                 <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Uitloggen</button>
             </div>
-            <button id="settingsBtn" class="btn" style="display: none;">⚙️ Instellingen</button>
         </section>
 
         <!-- Main App -->
