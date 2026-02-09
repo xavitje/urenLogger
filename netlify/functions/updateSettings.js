@@ -14,14 +14,14 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { hourlyRate, kmRate, kmRange } = JSON.parse(event.body || '{}');
+    const { hourlyRate, kmRate, kmRange, travelAllowanceEnabled } = JSON.parse(event.body || '{}');
 
     if (typeof hourlyRate !== 'number' || typeof kmRate !== 'number' || typeof kmRange !== 'number') {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Alle velden moeten getallen zijn.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: 'Alle velden moeten getallen zijn.' }) };
     }
 
     if (hourlyRate < 0 || kmRate < 0 || kmRange < 0) {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Waardes mogen niet negatief zijn.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: 'Waardes mogen niet negatief zijn.' }) };
     }
 
     const db = await getDb();
@@ -34,6 +34,7 @@ exports.handler = async (event) => {
           hourlyRate: hourlyRate,
           kmRate: kmRate,
           kmRange: kmRange,
+          travelAllowanceEnabled: !!travelAllowanceEnabled,
           settingsUpdatedAt: new Date()
         }
       }

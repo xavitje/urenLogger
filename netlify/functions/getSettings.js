@@ -25,13 +25,14 @@ exports.handler = async (event) => {
     const dbUser = await usersCol.findOne({ _id: new ObjectId(user.userId) });
 
     if (!dbUser) {
-        return { statusCode: 404, body: JSON.stringify({ error: 'User not found' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: 'User not found' }) };
     }
 
     const settings = {
-        hourlyRate: dbUser.hourlyRate || DEFAULT_HOURLY_RATE,
-        kmRate: dbUser.kmRate || DEFAULT_KM_RATE,
-        kmRange: dbUser.kmRange || DEFAULT_KM_RANGE,
+      hourlyRate: dbUser.hourlyRate ?? DEFAULT_HOURLY_RATE,
+      kmRate: dbUser.kmRate ?? DEFAULT_KM_RATE,
+      kmRange: dbUser.kmRange ?? DEFAULT_KM_RANGE,
+      travelAllowanceEnabled: dbUser.travelAllowanceEnabled ?? true,
     };
 
     return {

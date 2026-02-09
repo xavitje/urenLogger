@@ -16,6 +16,7 @@ const hourlyRateInput = document.getElementById('hourlyRateInput');
 const kmRateInput = document.getElementById('kmRateInput');
 const kmRange = document.getElementById('kmRange');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
+const travelAllowanceEnabledInput = document.getElementById('travelAllowanceEnabled');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const hoursSection = document.getElementById('hoursSection');
 const dateInput = document.getElementById('date');
@@ -40,7 +41,8 @@ let currentSort = { by: 'date', dir: 'desc' };
 let userSettings = {
     hourlyRate: 16.35,
     kmRate: 0.23,
-    kmRange: 62
+    kmRange: 62,
+    travelAllowanceEnabled: true
 };
 // Constanten voor berekeningen
 
@@ -84,11 +86,11 @@ function applyTheme(theme) {
     if (theme === 'dark') {
         document.body.classList.add('dark-theme');
         document.body.classList.remove('light-theme');
-        if(themeToggleBtn) themeToggleBtn.textContent = '☀️ Wissel naar Licht Thema';
+        if (themeToggleBtn) themeToggleBtn.textContent = '☀️ Wissel naar Licht Thema';
     } else {
         document.body.classList.add('light-theme');
         document.body.classList.remove('dark-theme');
-        if(themeToggleBtn) themeToggleBtn.textContent = '🌙 Wissel naar Donker Thema';
+        if (themeToggleBtn) themeToggleBtn.textContent = '🌙 Wissel naar Donker Thema';
     }
     localStorage.setItem('theme', theme);
 }
@@ -183,11 +185,19 @@ async function loadSettings() {
         userSettings.hourlyRate = settings.hourlyRate;
         userSettings.kmRate = settings.kmRate;
         userSettings.kmRange = settings.kmRange;
+        userSettings.travelAllowanceEnabled = settings.travelAllowanceEnabled ?? true;
 
         // Update placeholders in de modal
         if (hourlyRateInput) hourlyRateInput.value = userSettings.hourlyRate;
-        if (kmRateInput) kmRateInput.value = userSettings.kmRate;
-        if (kmRange) kmRange.value = userSettings.kmRange;
+        if (kmRateInput) {
+            kmRateInput.value = userSettings.kmRate;
+            kmRateInput.disabled = !userSettings.travelAllowanceEnabled;
+        }
+        if (kmRange) {
+            kmRange.value = userSettings.kmRange;
+            kmRange.disabled = !userSettings.travelAllowanceEnabled;
+        }
+        if (travelAllowanceEnabledInput) travelAllowanceEnabledInput.checked = userSettings.travelAllowanceEnabled;
 
         // Herbereken de tabel met de nieuwe tarieven
         renderTable();
@@ -202,9 +212,10 @@ async function saveSettings() {
 
     const newHourlyRate = parseFloat(hourlyRateInput.value);
     const newKmRate = parseFloat(kmRateInput.value);
-    const newKmRange = parseFloat(kmRange.value)
+    const newKmRange = parseFloat(kmRange.value);
+    const newTravelAllowanceEnabled = travelAllowanceEnabledInput.checked;
 
-    if (isNaN(newHourlyRate) || isNaN(newKmRate) || newHourlyRate < 0 || newKmRate < 0 || newKmRange < 0) {
+    if (isNaN(newHourlyRate) || isNaN(newKmRate) || isNaN(newKmRange) || newHourlyRate < 0 || newKmRate < 0 || newKmRange < 0) {
         alert('Vul geldige, positieve getallen in voor de tarieven.');
         return;
     }
@@ -217,7 +228,12 @@ async function saveSettings() {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ hourlyRate: newHourlyRate, kmRate: newKmRate, kmRange: newKmRange})
+            body: JSON.stringify({
+                hourlyRate: newHourlyRate,
+                kmRate: newKmRate,
+                kmRange: newKmRange,
+                travelAllowanceEnabled: newTravelAllowanceEnabled
+            })
         });
 
         const data = await res.json();
@@ -348,7 +364,7 @@ function calculateEarnings(rows) {
     });
 
     const hourlyPay = totalHours * userSettings.hourlyRate;
-    const travelAllowance = officeDays * userSettings.kmRange * userSettings.kmRate;
+    const travelAllowance = userSettings.travelAllowanceEnabled ? (officeDays * userSettings.kmRange * userSettings.kmRate) : 0;
     const totalGross = hourlyPay + travelAllowance;
 
     return {
@@ -500,7 +516,7 @@ function renderTable() {
     totalEarningsEl.innerHTML = `
         <strong>Bruto verdiensten (periode):</strong><br>
         Uren: ${earnings.totalHours}u × €${earnings.hourlyRate.toFixed(2)} = €${earnings.hourlyPay}<br>
-        Reiskosten: ${earnings.officeDays} kantoordag(en) × ${earnings.kmRange}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>
+        ${userSettings.travelAllowanceEnabled ? `Reiskosten: ${earnings.officeDays} kantoordag(en) × ${earnings.kmRange}km × €${earnings.kmRate.toFixed(2)} = €${earnings.travelAllowance}<br>` : ''}
         <strong>Totaal bruto: €${earnings.totalGross}</strong>
     `;
 }
@@ -571,7 +587,21 @@ if (settingsBtn) {
         hourlyRateInput.value = userSettings.hourlyRate;
         kmRateInput.value = userSettings.kmRate;
         kmRange.value = userSettings.kmRange;
+        travelAllowanceEnabledInput.checked = userSettings.travelAllowanceEnabled;
+
+        // Ensure inputs are correctly enabled/disabled when opening modal
+        kmRateInput.disabled = !userSettings.travelAllowanceEnabled;
+        kmRange.disabled = !userSettings.travelAllowanceEnabled;
+
         settingsModal.style.display = 'block';
+    });
+}
+
+if (travelAllowanceEnabledInput) {
+    travelAllowanceEnabledInput.addEventListener('change', () => {
+        const isEnabled = travelAllowanceEnabledInput.checked;
+        if (kmRateInput) kmRateInput.disabled = !isEnabled;
+        if (kmRange) kmRange.disabled = !isEnabled;
     });
 }
 if (closeSettingsBtn) {
